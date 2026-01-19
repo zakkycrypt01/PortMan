@@ -23,8 +23,16 @@ A powerful Rust CLI tool to monitor and manage ports on your Linux system. Easil
 
 ## Installation
 
+### 📦 Quick Install (Ubuntu/Debian .deb Package)
+
+```bash
+sudo apt install ./deb-build/portman_0.1.0.deb
+```
+
+Then use: `portman dashboard`, `portman-gui`, or `portman list`
+
 ### Prerequisites
-- Rust 1.70 or later
+- Rust 1.70 or later (if building from source)
 - Linux system (tested on Ubuntu, Fedora, Arch)
 
 ### Build from Source
