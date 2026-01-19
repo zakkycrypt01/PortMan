@@ -268,8 +268,6 @@ fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     f.render_widget(help_widget, chunks[2]);
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-
 fn parse_port(s: &str) -> anyhow::Result<u16> {
     let parts: Vec<&str> = s.split(':').collect();
     if parts.len() == 2 {
