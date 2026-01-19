@@ -277,6 +277,7 @@ fn parse_port(s: &str) -> anyhow::Result<u16> {
 }
 
 fn find_pid_by_inode(inode: u64) -> Option<u32> {
+    // First try the fd directory method
     let fd_dir = "/proc";
     if let Ok(entries) = fs::read_dir(fd_dir) {
         for entry in entries.flatten() {
@@ -285,6 +286,7 @@ fn find_pid_by_inode(inode: u64) -> Option<u32> {
                 if let Some(dir_name) = path.file_name() {
                     if let Ok(pid) = dir_name.to_string_lossy().parse::<u32>() {
                         let fd_path = path.join("fd");
+                        // Check if we can read this directory
                         if let Ok(fds) = fs::read_dir(&fd_path) {
                             for fd_entry in fds.flatten() {
                                 let fd_path = fd_entry.path();
@@ -302,5 +304,27 @@ fn find_pid_by_inode(inode: u64) -> Option<u32> {
             }
         }
     }
+    
+    // Fallback: try using ss command
+    if let Ok(output) = std::process::Command::new("ss")
+        .args(&["-tlnp"])
+        .output() {
+        if let Ok(stdout) = String::from_utf8(output.stdout) {
+            for line in stdout.lines() {
+                if line.contains(&format!("{}:", inode)) || 
+                   (line.contains("socket") && line.contains(&inode.to_string())) {
+                    // Extract PID from the line
+                    if let Some(pid_part) = line.split_whitespace().find(|s| s.contains('/')) {
+                        if let Some(pid_str) = pid_part.split('/').next() {
+                            if let Ok(pid) = pid_str.parse::<u32>() {
+                                return Some(pid);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     None
 }
