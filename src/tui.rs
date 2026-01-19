@@ -158,7 +158,86 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
     loop {
         terminal.draw(|f| {
-            draw_ui(f, &app);
+            // Title
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(2)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(5),
+                        Constraint::Length(4),
+                    ]
+                    .as_ref(),
+                )
+                .split(f.size());
+
+            let title = Paragraph::new("
+ ____   ___  ____  _____ __  __    _    _   _ 
+|  _ \\ / _ \\|  _ \\|_   _|  \\/  |  / \\  | \\ | |
+| |_) | | | | |_) | | | | |\\/| | / _ \\ |  \\| |
+|  __/| |_| |  _ <  | | | |  | |/ ___ \\| |\\  |
+|_|    \\___/|_| \\_\\ |_| |_|  |_/_/   \\_\\_| \\_|")
+                .style(Style::default().fg(Color::Cyan));
+            f.render_widget(title, chunks[0]);
+
+            // Ports list
+            let ports_list: Vec<ListItem> = app
+                .ports
+                .iter()
+                .enumerate()
+                .map(|(idx, port)| {
+                    let content = format!(":{:<6} → {} (PID: {})", port.port, port.process_name, port.pid);
+                    let style = if idx == app.selected_index {
+                        Style::default()
+                            .fg(Color::White)
+                            .bg(Color::DarkGray)
+                            .add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Cyan)
+                    };
+                    ListItem::new(content).style(style)
+                })
+                .collect();
+
+            let ports_block = Block::default()
+                .borders(Borders::ALL)
+                .title(" Active Ports ")
+                .style(Style::default().fg(Color::Green));
+
+            if ports_list.is_empty() {
+                let empty = Paragraph::new("No ports in use")
+                    .style(Style::default().fg(Color::Yellow))
+                    .block(ports_block);
+                f.render_widget(empty, chunks[1]);
+            } else {
+                let ports_widget = List::new(ports_list).block(ports_block);
+                f.render_widget(ports_widget, chunks[1]);
+            }
+
+            // Help text
+            let help_text = vec![
+                Line::from(vec![
+                    Span::styled("↑/k", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::raw(" - Up  |  "),
+                    Span::styled("↓/j", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::raw(" - Down  |  "),
+                    Span::styled("d", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::raw(" - Kill  |  "),
+                    Span::styled("r", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::raw(" - Refresh  |  "),
+                    Span::styled("q/Esc", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                    Span::raw(" - Quit"),
+                ]),
+            ];
+
+            let help_block = Block::default()
+                .borders(Borders::ALL)
+                .title(" Controls ")
+                .style(Style::default().fg(Color::Magenta));
+
+            let help_widget = Paragraph::new(help_text).block(help_block);
+            f.render_widget(help_widget, chunks[2]);
         })?;
 
         if crossterm::event::poll(Duration::from_millis(250))? {
@@ -185,87 +264,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     Ok(())
 }
 
-fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(2)
-        .constraints(
-            [
-                Constraint::Length(3),
-                Constraint::Min(5),
-                Constraint::Length(4),
-            ]
-            .as_ref(),
-        )
-        .split(f.size());
-
-    // Title
-    let title = Paragraph::new("
- ____   ___  ____  _____ __  __    _    _   _ 
-|  _ \\ / _ \\|  _ \\|_   _|  \\/  |  / \\  | \\ | |
-| |_) | | | | |_) | | | | |\\/| | / _ \\ |  \\| |
-|  __/| |_| |  _ <  | | | |  | |/ ___ \\| |\\  |
-|_|    \\___/|_| \\_\\ |_| |_|  |_/_/   \\_\\_| \\_|")
-        .style(Style::default().fg(Color::Cyan));
-    f.render_widget(title, chunks[0]);
-
-    // Ports list
-    let ports_list: Vec<ListItem> = app
-        .ports
-        .iter()
-        .enumerate()
-        .map(|(idx, port)| {
-            let content = format!(":{:<6} → {} (PID: {})", port.port, port.process_name, port.pid);
-            let style = if idx == app.selected_index {
-                Style::default()
-                    .fg(Color::White)
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(Color::Cyan)
-            };
-            ListItem::new(content).style(style)
-        })
-        .collect();
-
-    let ports_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Active Ports ")
-        .style(Style::default().fg(Color::Green));
-
-    if ports_list.is_empty() {
-        let empty = Paragraph::new("No ports in use")
-            .style(Style::default().fg(Color::Yellow))
-            .block(ports_block);
-        f.render_widget(empty, chunks[1]);
-    } else {
-        let ports_widget = List::new(ports_list).block(ports_block);
-        f.render_widget(ports_widget, chunks[1]);
-    }
-
-    // Help text
-    let help_text = vec![
-        Line::from(vec![
-            Span::styled("↑/k", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" - Up  |  "),
-            Span::styled("↓/j", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" - Down  |  "),
-            Span::styled("d", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" - Kill  |  "),
-            Span::styled("r", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" - Refresh  |  "),
-            Span::styled("q/Esc", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw(" - Quit"),
-        ]),
-    ];
-
-    let help_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Controls ")
-        .style(Style::default().fg(Color::Magenta));
-
-    let help_widget = Paragraph::new(help_text).block(help_block);
-    f.render_widget(help_widget, chunks[2]);
+fn draw_ui(app: &App) {
 }
 
 fn parse_port(s: &str) -> anyhow::Result<u16> {
