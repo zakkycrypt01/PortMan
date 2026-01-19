@@ -40,19 +40,28 @@ impl GuiBackend {
 
         let file = fs::File::open(proc_net_file)?;
         let reader = std::io::BufReader::new(file);
-        let mut port_pids = Vec::new();
+        let mut port_info_map: std::collections::HashMap<u16, u32> = std::collections::HashMap::new();
 
-        for line in reader.lines().skip(1) {
-            let line = line?;
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() > 3 {
-                if let Ok(port) = parse_port(&parts[1]) {
-                    if let Ok(state) = parts[3].parse::<u32>() {
-                        if state == 10 {
-                            // LISTEN state
-                            if let Ok(inode) = parts[9].parse::<u64>() {
-                                if let Some(pid) = find_pid_by_inode(inode) {
-                                    port_pids.push((port, pid));
+        // Parse /proc/net/tcp to get port->pid mappings using ss command
+        if let Ok(output) = std::process::Command::new("ss")
+            .args(&["-tlnp"])
+            .output() {
+            if let Ok(stdout) = String::from_utf8(output.stdout) {
+                for line in stdout.lines() {
+                    // Format: LISTEN    0      128         127.0.0.1:5174            0.0.0.0:*        users:(("portman-desktop",pid=23856,fd=5))
+                    if line.contains("LISTEN") {
+                        // Extract port from the local address
+                        if let Some(addr_part) = line.split_whitespace().find(|s| s.contains(':')) {
+                            if let Some(port_str) = addr_part.split(':').last() {
+                                if let Ok(port) = port_str.parse::<u16>() {
+                                    // Extract PID from the line
+                                    if let Some(pid_part) = line.split("pid=").nth(1) {
+                                        if let Some(pid_str) = pid_part.split(',').next() {
+                                            if let Ok(pid) = pid_str.parse::<u32>() {
+                                                port_info_map.insert(port, pid);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -61,9 +70,10 @@ impl GuiBackend {
             }
         }
 
-        let mut system = System::new_all();
+        let system = System::new_all();
         let mut result = Vec::new();
-        for (port, pid) in port_pids {
+        
+        for (port, pid) in port_info_map {
             if let Some(process) = system.process(Pid::from_u32(pid)) {
                 result.push(PortInfo {
                     port,
