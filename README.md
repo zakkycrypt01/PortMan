@@ -134,6 +134,31 @@ Processes:
   Command: /usr/bin/node
 ```
 
+## Dashboard Features
+
+The interactive dashboard provides a user-friendly TUI interface with:
+
+```
+ ____   ___  ____  _____ __  __    _    _   _ 
+|  _ \ / _ \|  _ \|_   _|  \/  |  / \  | \ | |
+| |_) | | | | |_) | | | | |\/| | / _ \ |  \| |
+|  __/| |_| |  _ <  | | | |  | |/ ___ \| |\  |
+|_|    \___/|_| \_\ |_| |_|  |_/_/   \_\_| \_|
+
+=== Active Ports ===
+:3000  → next-dev (PID: 1234)
+:5432 → postgres (PID: 5678)
+:8080 → node (PID: 9012)
+
+Controls: ↑/k - Up | ↓/j - Down | d - Kill | r - Refresh | q/Esc - Quit
+```
+
+**Key Features:**
+- 🎯 Highlighted selection for easy navigation
+- 🔄 Auto-refresh every 250ms
+- ⚡ Kill processes with a single keypress (d)
+- 📊 Real-time port list updates
+
 ## Common Examples
 
 ### Kill Next.js Dev Server
