@@ -125,10 +125,21 @@ fn find_pid_by_inode(inode: u64) -> Option<u32> {
                         if let Ok(fds) = fs::read_dir(&fd_path) {
                             for fd_entry in fds.flatten() {
                                 let fd_path = fd_entry.path();
+                                // Try to read the symlink
                                 if let Ok(target) = fs::read_link(&fd_path) {
                                     if let Some(target_str) = target.to_str() {
                                         if target_str.contains(&format!("socket:[{}]", inode)) {
                                             return Some(pid);
+                                        }
+                                    }
+                                }
+                                // Fallback: check the file name if it's a socket
+                                if let Ok(metadata) = fd_entry.metadata() {
+                                    if metadata.is_symlink() {
+                                        if let Ok(content) = std::fs::read_to_string(&fd_path) {
+                                            if content.contains(&format!("socket:[{}]", inode)) {
+                                                return Some(pid);
+                                            }
                                         }
                                     }
                                 }
