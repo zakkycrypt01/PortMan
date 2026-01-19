@@ -33,34 +33,31 @@ impl GuiBackend {
     }
 
     pub fn get_all_ports(&self) -> anyhow::Result<Vec<PortInfo>> {
-        let proc_net_file = "/proc/net/tcp";
-        if !std::path::Path::new(proc_net_file).exists() {
-            return Ok(Vec::new());
-        }
-
-        let file = fs::File::open(proc_net_file)?;
-        let reader = std::io::BufReader::new(file);
         let mut port_info_map: std::collections::HashMap<u16, u32> = std::collections::HashMap::new();
 
-        // Parse /proc/net/tcp to get port->pid mappings using ss command
+        // Parse using ss command to get port->pid mappings
         if let Ok(output) = std::process::Command::new("ss")
             .args(&["-tlnp"])
             .output() {
             if let Ok(stdout) = String::from_utf8(output.stdout) {
                 for line in stdout.lines() {
-                    // Format: LISTEN    0      128         127.0.0.1:5174            0.0.0.0:*        users:(("portman-desktop",pid=23856,fd=5))
-                    if line.contains("LISTEN") {
-                        // Extract port from the local address
-                        if let Some(addr_part) = line.split_whitespace().find(|s| s.contains(':')) {
-                            if let Some(port_str) = addr_part.split(':').last() {
-                                if let Ok(port) = port_str.parse::<u16>() {
-                                    // Extract PID from the line
-                                    if let Some(pid_part) = line.split("pid=").nth(1) {
-                                        if let Some(pid_str) = pid_part.split(',').next() {
-                                            if let Ok(pid) = pid_str.parse::<u32>() {
-                                                port_info_map.insert(port, pid);
+                    // Look for LISTEN lines with pid=
+                    if line.contains("LISTEN") && line.contains("pid=") {
+                        // Extract port number (format: address:port)
+                        // Line might look like: LISTEN 0 1 127.0.0.1:9999 0.0.0.0:* users:(("nc",pid=26629,fd=3))
+                        for part in line.split_whitespace() {
+                            if part.contains(':') && !part.contains("0.0.0.0") && !part.starts_with("::") {
+                                if let Some(port_str) = part.split(':').last() {
+                                    if let Ok(port) = port_str.parse::<u16>() {
+                                        // Extract PID from pid=XXXX
+                                        if let Some(pid_part) = line.split("pid=").nth(1) {
+                                            if let Some(pid_str) = pid_part.split(',').next() {
+                                                if let Ok(pid) = pid_str.parse::<u32>() {
+                                                    port_info_map.insert(port, pid);
+                                                }
                                             }
                                         }
+                                        break; // Got the port from this line
                                     }
                                 }
                             }
