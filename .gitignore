@@ -20,3 +20,4 @@ dist/
 
 # Dependencies
 .cargo/
+.github/
