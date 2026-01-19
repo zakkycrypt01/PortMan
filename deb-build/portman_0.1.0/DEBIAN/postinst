@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+# Add symlink to PATH if needed
+if [ ! -L /usr/bin/portman ]; then
+    ln -s /usr/local/bin/portman /usr/bin/portman
+fi
+
+if [ ! -L /usr/bin/portman-gui ]; then
+    ln -s /usr/local/bin/portman-gui /usr/bin/portman-gui
+fi
+
+echo "PortMan installed successfully!"
+echo ""
+echo "Usage:"
+echo "  portman dashboard     - Launch TUI dashboard"
+echo "  portman list          - List all active ports"
+echo "  portman check <port>  - Check a specific port"
+echo "  portman kill <port>   - Kill process on port"
+echo "  portman-gui           - Launch web GUI at http://127.0.0.1:5173"
+echo ""
