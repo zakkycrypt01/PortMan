@@ -1,0 +1,20 @@
+Package: portman
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Installed-Size: 8192
+Maintainer: ZAKKYCRYPT <dev@portman.local>
+Homepage: https://github.com/zakkycrypt/portman
+Description: Port Monitor & Manager for Linux
+ PortMan is a powerful CLI and GUI application for monitoring and managing
+ ports on Linux systems. Check which processes are using specific ports,
+ kill them when needed, and monitor multiple ports in real-time.
+ .
+ Features:
+  - Interactive TUI dashboard for real-time monitoring
+  - Beautiful web GUI with modern interface
+  - Check port usage with single command
+  - Kill processes by port number
+  - Monitor multiple ports simultaneously
+  - View detailed process information (memory, CPU usage)
