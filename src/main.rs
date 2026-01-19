@@ -1,5 +1,6 @@
 mod port_monitor;
 mod tui;
+mod gui;
 
 use clap::{Parser, Subcommand};
 use port_monitor::PortMonitor;
