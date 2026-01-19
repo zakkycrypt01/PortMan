@@ -237,23 +237,15 @@ impl PortMonitor {
             .output() {
             if let Ok(stdout) = String::from_utf8(output.stdout) {
                 for line in stdout.lines() {
-                    // Format: LISTEN    0      128         127.0.0.1:5174            0.0.0.0:*        users:(("portman-desktop",pid=23856,fd=5))
-                    if line.contains("LISTEN") {
-                        // Extract port from the local address
-                        if let Some(addr_part) = line.split_whitespace().find(|s| s.contains(':')) {
-                            if let Some(port_str) = addr_part.split(':').last() {
-                                if let Ok(p) = port_str.parse::<u16>() {
-                                    if p == port {
-                                        // Extract PID from the line
-                                        if let Some(pid_part) = line.split("pid=").nth(1) {
-                                            if let Some(pid_str) = pid_part.split(',').next() {
-                                                if let Ok(pid) = pid_str.parse::<u32>() {
-                                                    if let Some(process) = self.system.process(Pid::from_u32(pid)) {
-                                                        result.push((pid, process.name().to_string()));
-                                                    }
-                                                }
-                                            }
-                                        }
+                    // Look for lines with our port number
+                    let port_str = format!(":{}", port);
+                    if line.contains(&port_str) && line.contains("LISTEN") && line.contains("pid=") {
+                        // Extract PID from pid=XXXX
+                        if let Some(pid_part) = line.split("pid=").nth(1) {
+                            if let Some(pid_str) = pid_part.split(',').next() {
+                                if let Ok(pid) = pid_str.parse::<u32>() {
+                                    if let Some(process) = self.system.process(Pid::from_u32(pid)) {
+                                        result.push((pid, process.name().to_string()));
                                     }
                                 }
                             }
