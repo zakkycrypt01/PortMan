@@ -44,13 +44,28 @@ sudo cp target/release/portman /usr/local/bin/
 
 ## Usage
 
-### Launch Interactive Dashboard (Recommended!)
+### 🌐 Launch Web GUI (Best for Visual Users!)
+
+```bash
+./target/release/portman-gui
+```
+
+Then open your browser and go to: **http://127.0.0.1:5173**
+
+**Features:**
+- 🎨 Beautiful modern web interface
+- 🔄 Auto-refresh every 2 seconds
+- 📊 Real-time memory and CPU monitoring
+- ⚔️ One-click process termination
+- 📱 Responsive design (works on tablets too!)
+
+### 🎮 Launch Interactive TUI Dashboard
 
 ```bash
 portman dashboard
 ```
 
-This opens a beautiful interactive TUI interface where you can:
+This opens a beautiful interactive terminal interface where you can:
 - **↑/k** or **↓/j** - Navigate through ports
 - **d** - Kill selected process
 - **r** - Refresh port list
@@ -133,6 +148,42 @@ Processes:
   CPU Usage: 2.34%
   Command: /usr/bin/node
 ```
+
+## Web GUI Features
+
+The web GUI provides a modern, responsive interface with:
+
+- **Real-time Port Monitoring** - Live updates every 2 seconds
+- **Process Information** - See memory usage and CPU percentage for each port
+- **One-Click Termination** - Kill processes with a single button click
+- **Auto-Refresh Toggle** - Enable/disable automatic refreshing
+- **Beautiful Design** - Cyberpunk-themed dark interface with cyan accents
+- **Responsive Layout** - Works on desktop, tablet, and smaller screens
+
+## TUI Dashboard Features
+
+The interactive terminal dashboard provides a user-friendly interface with:
+
+```
+ ____   ___  ____  _____ __  __    _    _   _ 
+|  _ \ / _ \|  _ \|_   _|  \/  |  / \  | \ | |
+| |_) | | | | |_) | | | | |\/| | / _ \ |  \| |
+|  __/| |_| |  _ <  | | | |  | |/ ___ \| |\  |
+|_|    \___/|_| \_\ |_| |_|  |_/_/   \_\_| \_|
+
+=== Active Ports ===
+:3000  → next-dev (PID: 1234)
+:5432 → postgres (PID: 5678)
+:8080 → node (PID: 9012)
+
+Controls: ↑/k - Up | ↓/j - Down | d - Kill | r - Refresh | q/Esc - Quit
+```
+
+**TUI Key Features:**
+- 🎯 Highlighted selection for easy navigation
+- 🔄 Auto-refresh every 250ms
+- ⚡ Kill processes with a single keypress (d)
+- 📊 Real-time port list updates
 
 ## Dashboard Features
 
