@@ -77,6 +77,9 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Dashboard => {
+            tui::run_tui()?;
+        }
         Commands::Check { port } => {
             let monitor = PortMonitor::new();
             monitor.check_port(port)?;
