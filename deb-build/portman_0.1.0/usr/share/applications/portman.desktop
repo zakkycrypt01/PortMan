@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PortMan
+Comment=Monitor and manage ports on your Linux system
+Exec=portman-desktop
+Icon=utilities-system-monitor
+Categories=Utility;System;Network;
+Terminal=false
+StartupNotify=true
+Keywords=port;monitor;process;network;

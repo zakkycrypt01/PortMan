@@ -1,0 +1,28 @@
+{
+  "build": {
+    "beforeDevCommand": "echo 'Dev mode'",
+    "devPath": "../ui",
+    "beforeBuildCommand": "echo 'Building'",
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PortMan - Desktop",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "package": {
+    "productName": "PortMan",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortMan Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00d9ff;
+            --secondary: #1a1a2e;
+            --accent: #ff006e;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #ffffff;
+            --text-secondary: #d1d5db;
+            --border: #374151;
+            --bg-hover: #2d2d4d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: var(--text);
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 20px;
+            border-bottom: 2px solid var(--primary);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .status {
+            padding: 12px 16px;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: rgba(0, 217, 255, 0.15);
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .port-num {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .process-name {
+            color: var(--success);
+        }
+
+        .memory-low { color: var(--success); }
+        .memory-high { color: var(--danger); }
+        .cpu-low { color: var(--success); }
+        .cpu-high { color: var(--danger); }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 2px solid var(--danger);
+            background: transparent;
+            color: var(--danger);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .action-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 PortMan Desktop</h1>
+            <div class="controls">
+                <button onclick="refreshPorts()">🔄 Refresh</button>
+                <button id="autoBtn" class="active" onclick="toggleAuto()">⏱️ Auto: ON</button>
+            </div>
+        </header>
+        <div class="content">
+            <div class="status">Ports: <span id="count">0</span></div>
+            <div id="message"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Port</th>
+                        <th>Process</th>
+                        <th>PID</th>
+                        <th>Memory (MB)</th>
+                        <th>CPU %</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ports"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let autoRefresh = true;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshPorts();
+            setInterval(() => {
+                if (autoRefresh) refreshPorts();
+            }, 2000);
+        });
+
+        async function refreshPorts() {
+            try {
+                const result = await window.__TAURI__.invoke('get_all_ports');
+                renderTable(result);
+            } catch (e) {
+                showError('Failed to fetch ports: ' + e);
+            }
+        }
+
+        function renderTable(ports) {
+            const tbody = document.getElementById('ports');
+            document.getElementById('count').textContent = ports.length;
+
+            if (ports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">No ports in use</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = ports.map(p => `
+                <tr>
+                    <td><span class="port-num">:${p.port}</span></td>
+                    <td><span class="process-name">${p.process_name}</span></td>
+                    <td>${p.pid}</td>
+                    <td id="mem-${p.port}"><span>...</span></td>
+                    <td id="cpu-${p.port}"><span>...</span></td>
+                    <td><button class="action-btn" onclick="killPort(${p.port})">Kill</button></td>
+                </tr>
+            `).join('');
+
+            ports.forEach(p => loadDetails(p.port));
+        }
+
+        async function loadDetails(port) {
+            try {
+                const result = await window.__TAURI__.invoke('get_port_details', { port });
+                if (result) {
+                    const mem = result.memory_mb.toFixed(1);
+                    const cpu = result.cpu_usage.toFixed(1);
+                    const memClass = mem < 50 ? 'memory-low' : 'memory-high';
+                    const cpuClass = cpu < 10 ? 'cpu-low' : 'cpu-high';
+                    document.getElementById(`mem-${port}`).innerHTML = `<span class="${memClass}">${mem}</span>`;
+                    document.getElementById(`cpu-${port}`).innerHTML = `<span class="${cpuClass}">${cpu}</span>`;
+                }
+            } catch (e) {
+                console.error('Error loading details:', e);
+            }
+        }
+
+        async function killPort(port) {
+            if (!confirm(`Kill process on port ${port}?`)) return;
+            try {
+                const result = await window.__TAURI__.invoke('kill_port', { port });
+                showSuccess(result);
+                setTimeout(refreshPorts, 500);
+            } catch (e) {
+                showError('Failed to kill port: ' + e);
+            }
+        }
+
+        function toggleAuto() {
+            autoRefresh = !autoRefresh;
+            document.getElementById('autoBtn').classList.toggle('active');
+            document.getElementById('autoBtn').textContent = autoRefresh ? '⏱️ Auto: ON' : '⏸️ Auto: OFF';
+        }
+
+        function showError(msg) {
+            const div = document.getElementById('message');
+            div.className = 'error';
+            div.textContent = msg;
+            setTimeout(() => div.textContent = '', 5000);
+        }
+
+        function showSuccess(msg) {
+            const div = document.getElementById('message');
+            div.className = 'success';
+            div.textContent = msg;
+            setTimeout(() => div.textContent = '', 3000);
+        }
+    </script>
+</body>
+</html>
