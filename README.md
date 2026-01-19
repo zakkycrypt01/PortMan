@@ -14,6 +14,7 @@ A powerful Rust CLI tool to monitor and manage ports on your Linux system. Easil
 
 ## Features
 
+- 🎨 **Interactive Dashboard** - Beautiful TUI interface for real-time monitoring
 - 🔍 **Check Port Usage** - See which process is using a specific port
 - 📊 **List All Ports** - View all ports currently in use
 - ⚔️ **Kill Processes** - Terminate processes using a specific port
@@ -42,6 +43,18 @@ sudo cp target/release/portman /usr/local/bin/
 ```
 
 ## Usage
+
+### Launch Interactive Dashboard (Recommended!)
+
+```bash
+portman dashboard
+```
+
+This opens a beautiful interactive TUI interface where you can:
+- **↑/k** or **↓/j** - Navigate through ports
+- **d** - Kill selected process
+- **r** - Refresh port list
+- **q** or **Esc** - Quit
 
 ### Check a Specific Port
 
