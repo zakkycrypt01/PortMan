@@ -1,0 +1,27 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "devPath": "../src-tauri/dist",
+    "beforeBuildCommand": "",
+    "frontendDist": "../src-tauri/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PortMan - Port Monitor & Manager",
+        "width": 1000,
+        "height": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "package": {
+    "productName": "portman",
+    "version": "0.1.0"
+  }
+}
