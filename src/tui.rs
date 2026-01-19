@@ -186,10 +186,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 }
 
 fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    ui(f, app);
-}
-
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(2)
@@ -271,6 +267,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let help_widget = Paragraph::new(help_text).block(help_block);
     f.render_widget(help_widget, chunks[2]);
 }
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
 fn parse_port(s: &str) -> anyhow::Result<u16> {
     let parts: Vec<&str> = s.split(':').collect();
