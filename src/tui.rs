@@ -82,7 +82,7 @@ impl App {
             }
         }
 
-        let mut system = System::new_all();
+        let system = System::new_all();
         for (port, pid) in port_pids {
             if let Some(process) = system.process(Pid::from_u32(pid)) {
                 ports_info.push(PortInfo {
@@ -157,7 +157,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     app.refresh_ports();
 
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| {
+            draw_ui(f, &app);
+        })?;
 
         if crossterm::event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
@@ -181,6 +183,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 
     Ok(())
+}
+
+fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+    ui(f, app);
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
@@ -231,17 +237,15 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .title(" Active Ports ")
         .style(Style::default().fg(Color::Green));
 
-    let ports_widget = if ports_list.is_empty() {
+    if ports_list.is_empty() {
         let empty = Paragraph::new("No ports in use")
             .style(Style::default().fg(Color::Yellow))
             .block(ports_block);
         f.render_widget(empty, chunks[1]);
-        return;
     } else {
-        List::new(ports_list).block(ports_block)
-    };
-
-    f.render_widget(ports_widget, chunks[1]);
+        let ports_widget = List::new(ports_list).block(ports_block);
+        f.render_widget(ports_widget, chunks[1]);
+    }
 
     // Help text
     let help_text = vec![
