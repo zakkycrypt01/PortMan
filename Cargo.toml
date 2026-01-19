@@ -11,6 +11,10 @@ path = "src/main.rs"
 name = "portman-gui"
 path = "src/gui_main.rs"
 
+[[bin]]
+name = "portman-desktop"
+path = "src/desktop_main.rs"
+
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
 sysinfo = "0.30"
