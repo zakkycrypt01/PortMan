@@ -229,37 +229,37 @@ impl PortMonitor {
     }
 
     fn find_processes_using_port(&self, port: u16) -> anyhow::Result<Vec<(u32, String)>> {
-        let proc_net_file = "/proc/net/tcp";
-        let file = fs::File::open(proc_net_file)?;
-        let reader = io::BufReader::new(file);
+        let mut result = Vec::new();
 
-        let mut pids = Vec::new();
-
-        for line in reader.lines().skip(1) {
-            let line = line?;
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() > 3 {
-                if let Ok(p) = parse_port(&parts[1]) {
-                    if p == port {
-                        if let Ok(state) = parts[3].parse::<u32>() {
-                            if state == 10 {
-                                // LISTEN state
-                                if let Ok(inode) = parts[9].parse::<u64>() {
-                                    if let Some(pid) = find_pid_by_inode(inode) {
-                                        pids.push(pid);
+        // Use ss command to find listening sockets with PIDs
+        if let Ok(output) = std::process::Command::new("ss")
+            .args(&["-tlnp"])
+            .output() {
+            if let Ok(stdout) = String::from_utf8(output.stdout) {
+                for line in stdout.lines() {
+                    // Format: LISTEN    0      128         127.0.0.1:5174            0.0.0.0:*        users:(("portman-desktop",pid=23856,fd=5))
+                    if line.contains("LISTEN") {
+                        // Extract port from the local address
+                        if let Some(addr_part) = line.split_whitespace().find(|s| s.contains(':')) {
+                            if let Some(port_str) = addr_part.split(':').last() {
+                                if let Ok(p) = port_str.parse::<u16>() {
+                                    if p == port {
+                                        // Extract PID from the line
+                                        if let Some(pid_part) = line.split("pid=").nth(1) {
+                                            if let Some(pid_str) = pid_part.split(',').next() {
+                                                if let Ok(pid) = pid_str.parse::<u32>() {
+                                                    if let Some(process) = self.system.process(Pid::from_u32(pid)) {
+                                                        result.push((pid, process.name().to_string()));
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        let mut result = Vec::new();
-        for pid in pids {
-            if let Some(process) = self.system.process(Pid::from_u32(pid)) {
-                result.push((pid, process.name().to_string()));
             }
         }
 
